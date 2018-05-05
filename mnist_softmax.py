@@ -31,9 +31,9 @@ import tensorflow as tf
 FLAGS = None
 
 
-def main(_):
+def main():
   # Import data
-  mnist = input_data.read_data_sets(FLAGS.data_dir)
+  mnist = input_data.read_data_sets("/tmp")
   # log directory
   
   # Create the model
@@ -60,24 +60,24 @@ def main(_):
   sess = tf.InteractiveSession()
   tf.global_variables_initializer().run()
   # Train
-  train_writer = tf.summary.FileWriter( "C:/Users/handa_k/AppData/Local/Temp/mnist", sess.graph)
+  train_writer = tf.summary.FileWriter( "./tf-summary-logs", sess.graph)
   counter=0
+  tf.summary.scalar("cross_entropy", cross_entropy)
+  merge = tf.summary.merge_all()
+  
   for _ in range(1000):
-    counter+=1
-    merge = tf.summary.merge_all()
-    summary=sess.run(merge)
-    train_writer.add_summary(summary,counter)
+    counter += 1 
     batch_xs, batch_ys = mnist.train.next_batch(100)  # next_batch is a method of the DataSet class, mnist.train is an instance of class DataSet
-    sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys}) # batch_xs, is the number of images,batch_ys is the label  
-	# merging for board
-    
+    _, cp, summary = sess.run([train_step, cross_entropy, merge], feed_dict={x: batch_xs, y_: batch_ys}) # batch_xs, is the number of images,batch_ys is the label  
+    train_writer.add_summary(summary, counter)
+
 
   # Test trained model
   correct_prediction = tf.equal(tf.argmax(y, 1), y_) 
   # did not understand this. Argmax calculate the index of maximum value and it can be compared with y_  ?
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
   # histogram
-  tf.summary.histogram("Correct Predictions", correct_prediction)
+  #tf.summary.histogram("Correct Predictions", correct_prediction)
   print(sess.run(
       accuracy, feed_dict={
           x: mnist.test.images,    # what kind of instances are mnist.test.iamges and mnist.tets.labels and to which class it belongs to,
@@ -87,11 +87,4 @@ def main(_):
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--data_dir',
-      type=str,
-      default='/tmp/tensorflow/mnist/input_data',
-      help='Directory for storing input data')
-  FLAGS, unparsed = parser.parse_known_args()
-  tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+  main()
